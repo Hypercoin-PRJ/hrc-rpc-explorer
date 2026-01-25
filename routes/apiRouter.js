@@ -105,7 +105,7 @@ router.get("/blocks/tip/height", asyncHandler(async (req, res, next) => {
 	next();
 }));
 
-router.get("/block/:hashOrHeight", asyncHandler(async (req, res, next) => {
+/*--router.get("/block/:hashOrHeight", asyncHandler(async (req, res, next) => {
 	const hashOrHeight = req.params.hashOrHeight;
 	let hash = (hashOrHeight.length == 64 ? hashOrHeight : null);
 
@@ -126,9 +126,34 @@ router.get("/block/:hashOrHeight", asyncHandler(async (req, res, next) => {
 	}
 
 	next();
+}));--*/
+router.get("/block/:hashOrHeight", asyncHandler(async (req, res, next) => {
+  const hashOrHeight = req.params.hashOrHeight;
+  let hash = (hashOrHeight.length === 64 ? hashOrHeight : null);
+
+  try {
+    if (hash === null) {
+      hash = await coreApi.getBlockHashByHeight(parseInt(hashOrHeight));
+    }
+
+    const block = await coreApi.getBlockByHash(hash);
+
+    // Add blockHeight explicitly
+    res.json({
+      ...block,
+      blockHeight: block.height || 0
+    });
+
+  } catch (e) {
+    utils.logError("w9fgeddsuos", e);
+    res.json({ success: false });
+  }
+
+  // No next() here; response sent already
 }));
 
-router.get("/block/header/:hashOrHeight", asyncHandler(async (req, res, next) => {
+
+/*--router.get("/block/header/:hashOrHeight", asyncHandler(async (req, res, next) => {
 	const hashOrHeight = req.params.hashOrHeight;
 	let hash = (hashOrHeight.length == 64 ? hashOrHeight : null);
 
@@ -148,8 +173,45 @@ router.get("/block/header/:hashOrHeight", asyncHandler(async (req, res, next) =>
 	}
 
 	next();
-}));
+}));--*/
+// apiRouter.js
+router.get("/block/:hashOrHeight", asyncHandler(async (req, res, next) => {
+    const hashOrHeight = req.params.hashOrHeight;
+    let hash = (hashOrHeight.length == 64 ? hashOrHeight : null);
 
+    try {
+        if (hash == null) {
+            const height = parseInt(hashOrHeight);
+            if (isNaN(height)) {
+                return res.status(400).json({success: false, error: "Invalid block height"});
+            }
+            hash = await coreApi.getBlockHashByHeight(height);
+        }
+
+        const block = await coreApi.getBlockByHash(hash);
+        if (!block) {
+            return res.status(404).json({success: false, error: "Block not found"});
+        }
+
+        // Add height to the response if not already present
+        if (!block.height && hashOrHeight.length !== 64) {
+            block.height = parseInt(hashOrHeight);
+        }
+
+        res.json({
+            success: true,
+            getblock: block,
+            height: block.height
+        });
+
+    } catch (e) {
+        utils.logError("w9fgeddsuos", e);
+        res.status(500).json({
+            success: false,
+            error: "Error fetching block data"
+        });
+    }
+}));
 
 
 
@@ -184,7 +246,7 @@ router.get("/tx/:txid", asyncHandler(async (req, res, next) => {
 
 		outJson.fee = {
 			"amount": (inputBtc - outputBtc) / global.coinConfig.baseCurrencyUnit.multiplier,
-			"unit": "BTC"
+			"unit": "HRC"
 		};
 
 		if (outJson.confirmations == null) {
@@ -313,7 +375,7 @@ router.get("/blockchain/next-halving", asyncHandler(async (req, res, next) => {
 		res.json({
 			nextHalvingIndex: nextHalvingData.nextHalvingIndex,
 			nextHalvingBlock: nextHalvingData.nextHalvingBlock,
-			nextHalvingSubsidy: coinConfig.blockRewardFunction(nextHalvingData.nextHalvingBlock, global.activeBlockchain),
+			nextHalvingSubsidy: coinConfig.blockRewardFunction2(nextHalvingData.nextHalvingBlock, global.activeBlockchain),
 			blocksUntilNextHalving: nextHalvingData.blocksUntilNextHalving,
 			timeUntilNextHalving: formatParts.join(", "),
 			nextHalvingEstimatedDate: nextHalvingData.nextHalvingDate,

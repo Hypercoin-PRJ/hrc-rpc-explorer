@@ -5,7 +5,7 @@ block headContent
 	
 block content
 	+pageTitle("Transaction Stats")
-
+	include ads.pug
 	if (false)
 		pre
 			code.json #{JSON.stringify(txStatResults, null, 4)}

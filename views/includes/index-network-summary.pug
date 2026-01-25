@@ -88,7 +88,7 @@ if (exchangeRates)
 					- var currencyValue = parseInt(networkVolume.d1.amt);
 					- var currencyValueDecimals = 0;
 
-					if (userSettings.displayCurrency == "btc")
+					if (userSettings.displayCurrency == "hrc")
 						+valueDisplaySpecial(networkVolume.d1.amt, 0)
 
 					else
@@ -227,27 +227,16 @@ if (exchangeRates)
 				else
 					small.border-dotted.text-muted(title="Estimate pending...<br/>A new difficulty epoch just started. Difficulty adjustment estimates made with too little data can be very unreliable, so are not calculated.", data-bs-toggle="tooltip", data-bs-html="true")
 						i.bi-hourglass-split
-
-		+summaryItem("Coins", utxoSetSummary ? null : (config.slowDeviceMode ? `Because this app is configured to conserve resources (SLOW_DEVICE_MODE=true), this value is estimated, using a checkpoint.` : `This value is estimated, using a checkpoint.`))
+		+summaryItem("Max Supply / Circulation", utxoSetSummary ? null : `Coin Supply.`)
 			- var maxSupply = coinConfig.maxSupplyByNetwork[activeBlockchain];
-
-			if (utxoSetSummary)
-				span #{parseFloat(utxoSetSummary.total_amount).toLocaleString()}
-				span.text-tiny.ms-2.text-muted
-					| (
-					span.border-dotted(title=`${new Decimal(utxoSetSummary.total_amount).dividedBy(maxSupply).times(100).toDP(5)}% have been mined into circulation`, data-bs-toggle="tooltip") #{new Decimal(utxoSetSummary.total_amount).dividedBy(maxSupply).times(100).toDP(2, Decimal.ROUND_DOWN)}%
-					| )
-
-			else
-				- var estimatedSupply = utils.estimatedSupply(getblockchaininfo.blocks);
-
-				span #{parseInt(estimatedSupply).toLocaleString()}
-				span.text-tiny.ms-2.text-muted
-					| (
-					span.border-dotted(title=`${estimatedSupply.dividedBy(maxSupply).times(100).toDP(4)}% have been mined into circulation`, data-bs-toggle="tooltip") #{estimatedSupply.dividedBy(maxSupply).times(100).toDP(1)}%
-					| )
-
-		
+			- var rscurrentSupply = utils.getcurrentsupply();
+			- var rscurrentSupplyPercentage = ((utils.getcurrentsupply()/35000000)*100);
+			- var rscurrentSupplyPercentageRound = parseFloat(rscurrentSupplyPercentage).toFixed(2);
+			span.ms-2.text-muted(style="font-size: 13pt;color: black !important;") 35,000,000 / #{parseFloat(rscurrentSupply).toLocaleString()}
+			small.ms-2.text-muted(style="font-size: 11pt;")
+				| (
+				span.border-dotted(title=`${parseFloat(rscurrentSupplyPercentageRound).toLocaleString()}% of HRC has been mined into circulation.`, data-bs-toggle="tooltip") #{parseFloat(rscurrentSupplyPercentageRound).toLocaleString()}%
+				| )
 
 	hr.mt-3.mb-3
 
@@ -268,7 +257,7 @@ if (exchangeRates)
 			- smartFeeEstimateStrings.push(smartFeeEstimates[144]);
 			- smartFeeEstimateTimes.push('day');
 
-	+summaryRow((mempoolInfo == undefined ? 0 : 1) + (smartFeeEstimateStrings.length > 0 ? 1 : 0) + ((mempoolInfo && global.activeBlockchain != "signet") ? 1 : 0))
+	+summaryRow(1+(mempoolInfo == undefined ? 0 : 1) + (smartFeeEstimateStrings.length > 0 ? 1 : 0) + ((mempoolInfo && global.activeBlockchain != "signet") ? 1 : 0))
 		if (mempoolInfo)
 			- const thresholds_txCount = {warning: 7000, danger: 11000}
 			- const colorClass_txCount = (mempoolInfo.size > thresholds_txCount.danger) ? "text-danger" : (mempoolInfo.size > thresholds_txCount.warning ? "text-warning" : "text-success")
@@ -314,7 +303,7 @@ if (exchangeRates)
 								const largeNumberData = utils.formatLargeNumberSignificant(parts.intVal, 3);
 								val = `${largeNumberData[0]}${largeNumberData[1].abbreviation}`
 							}
-							// Amount followed by minimized currency name (BTC or sat) with a non-breaking space in-between
+							// Amount followed by minimized currency name (HRC or sat) with a non-breaking space in-between
 							return `${val}&nbsp;<span class='text-tiny'>${currencyType.name}</span>`
 						}
 					- const warningFees = formatFees(thresholds_totalFees.warning)
@@ -352,8 +341,9 @@ if (exchangeRates)
 
 					| #{x}
 					span.text-tiny.text-muted.ms-1 (#{smartFeeEstimateTimes[xIndex]})
-
-		
+		+summaryItem("Price", utxoSetSummary ? null : `Coin Price.`)
+			- var varfgetprice = parseFloat(utils.getprice()).toFixed(6);
+			span.ms-2.text-muted(style="font-size: 14pt;color: black !important;") $#{varfgetprice.toLocaleString()}
 
 	if (userSettings.homepageShowTechDetails == "true")
 		hr.mt-3.mb-3

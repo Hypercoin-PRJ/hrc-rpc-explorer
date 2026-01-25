@@ -14,7 +14,7 @@ module.exports = {
 		{
 			name: "Bitcoin Independence Day (UASF Day)",
 			date: "2017-08-01",
-			desc: "On this day in 2017, members of the community scheduled activation of a User-Activated Soft Fork (UASF) in a modified version of the Bitcoin Core software. This modification represented an ultimatum to SegWit-reluctant miners: either signal for SegWit activation or your blocks will be ignored. This community effort seemingly called the miners \"SegWit2X bluff\" and resulted in SegWit activation on the network in short order. Read more <a href='https://bitcoinmagazine.com/culture/bitcoin-independence-day-how-this-watershed-day-defines-community-consensus'>here</a>."
+			desc: "On this day in 2017, members of the community scheduled activation of a User-Activated Soft Fork (UASF) in a modified version of the Hypercoin Core software. This modification represented an ultimatum to SegWit-reluctant miners: either signal for SegWit activation or your blocks will be ignored. This community effort seemingly called the miners \"SegWit2X bluff\" and resulted in SegWit activation on the network in short order. Read more <a href='https://bitcoinmagazine.com/culture/bitcoin-independence-day-how-this-watershed-day-defines-community-consensus'>here</a>."
 		},
 		{
 			name: "Bitcoin Infinity Day",
@@ -64,7 +64,7 @@ module.exports = {
 		{
 			name: "Proof of Keys Day",
 			date: "2019-01-03",
-			desc: "On this day in 2019, to celebrate Bitcoin's 10th Birthday, Trace Mayer started an annual Proof-of-Keys Celebration. Participants declare monetary sovereignty by withdrawing their BTC into their own custody. Not your keys, not your bitcoin! You can read Trace Mayer's original tweet <a href='https://twitter.com/TraceMayer/status/1071870548421066753'>here</a>."
+			desc: "On this day in 2019, to celebrate Bitcoin's 10th Birthday, Trace Mayer started an annual Proof-of-Keys Celebration. Participats declare monetary sovereignty by withdrawing their BTC into their own custody. Not your keys, not your bitcoin! You can read Trace Mayer's original tweet <a href='https://twitter.com/TraceMayer/status/1071870548421066753'>here</a>."
 		},
 		{
 			name: "Genesis Transaction Day",

@@ -15,7 +15,7 @@ const ecc = require('tiny-secp256k1');
 const { BIP32Factory } = require('bip32');
 const moment = require("moment");
 const { bech32, bech32m } = require("bech32");
-
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 // You must wrap a tiny-secp256k1 compatible implementation
 const bip32 = BIP32Factory(ecc);
 
@@ -64,9 +64,6 @@ const crawlerBotUserAgentStrings = {
 	"python-requests": new RegExp("python-requests", "i"),
 	"openai": new RegExp("OAI-SearchBot", "i"),
 	"unidentifiedCrawler": new RegExp("Test Certificate Info", "i"),
-	"amazon": new RegExp("amazonbot", "i"),
-	"bytedance": new RegExp("bytespider", "i"),
-	"scrapy": new RegExp("Scrapy", "i"),
 };
 
 const ipMemoryCache = {};
@@ -153,6 +150,66 @@ const ipCache = {
 	}
 };
 
+// Updated Current Supply for HRC
+function getcurrentsupply() {
+	var currentsupply = 3501950;
+	var totalcurrentsupply = 0;
+	var fs = require('fs');
+	var request = require('request');
+	request('https://api.hypercoin.network/supply', function (error, response, body) {
+		if (!error && response.statusCode == 200) {
+			var getjson = JSON.parse(body);
+			console.log(String(getjson.result.supply));
+			fs.writeFile('supply.log', String(getjson.result.supply), function (err) {
+				if (err) return console.log(err);
+				console.log('Override Total Supply!');
+			});
+		}
+	});
+	var data;
+	try {
+		const filePath = '/root/hypercoin-rpc-explorer/supply.log';
+		if (fs.existsSync(filePath)) {
+			data = fs.readFileSync(filePath, 'utf8');
+			totalcurrentsupply = (data / 100000000);
+		} else {
+			console.log('File does not exist:', filePath);
+		}
+	} catch (e) {
+		console.log('Error:', e.stack);
+	}
+
+	currentsupply = totalcurrentsupply; 
+	return currentsupply;
+ }; 
+
+function getprice() {
+	const fs = require('fs');
+	const filePath = '/root/hypercoin-rpc-explorer/price.log';
+	let fresult = 0;
+	fetch("https://api.hypercoin.network/getprice")
+		.then(r => r.json())
+		.then(d => {
+			const price = d?.result?.price_usd;
+			if (price) {
+				const usd = (+price).toFixed(10);
+				console.log(`USD=${usd}`);
+				fs.writeFileSync(filePath, usd); // Always update
+				console.log('Price written to file.');
+			} else {
+				console.log('No price data.');
+			}
+		})
+		.catch(e => console.error('Error fetching price:', e));
+
+	if (fs.existsSync(filePath)) {
+		fresult = fs.readFileSync(filePath, 'utf8');
+		console.log('File content:', fresult);
+	} else {
+		console.log('File does not exist.');
+	}
+	return fresult;
+}
 
 
 function redirectToConnectPageIfNeeded(req, res) {
@@ -637,7 +694,7 @@ function getTxTotalInputOutputValues(tx, txInputs, blockHeight) {
 		if (txInputs) {
 			for (let i = 0; i < tx.vin.length; i++) {
 				if (tx.vin[i].coinbase) {
-					totalInputValue = totalInputValue.plus(new Decimal(coinConfig.blockRewardFunction(blockHeight, global.activeBlockchain)));
+					totalInputValue = totalInputValue.plus(new Decimal(coinConfig.blockRewardFunction2(blockHeight, global.activeBlockchain)));
 
 				} else {
 					let txInput = txInputs[i];
@@ -673,8 +730,8 @@ function getBlockTotalFeesFromCoinbaseTxAndBlockHeight(coinbaseTx, blockHeight) 
 	if (coinbaseTx == null) {
 		return 0;
 	}
-
-	let blockReward = coinConfig.blockRewardFunction(blockHeight, global.activeBlockchain);
+	//prung
+	let blockReward = coinConfig.blockRewardFunction2(blockHeight, global.activeBlockchain);
 
 	let totalOutput = new Decimal(0);
 	for (let i = 0; i < coinbaseTx.vout.length; i++) {
@@ -716,12 +773,12 @@ function estimatedSupply(height) {
 			let heightDiff = height - i;
 
 			//console.log(`adding(${heightDiff}): ` + new Decimal(heightDiff).times(coinConfig.blockRewardFunction(i, global.activeBlockchain)));
-			return supply.plus(new Decimal(heightDiff).times(coinConfig.blockRewardFunction(i, global.activeBlockchain)));
+			return supply.plus(new Decimal(heightDiff).times(coinConfig.blockRewardFunction2(i, global.activeBlockchain)));
 		}
 
 		let heightDiff = nextHalvingHeight - i;
 
-		supply = supply.plus(new Decimal(heightDiff).times(coinConfig.blockRewardFunction(i, global.activeBlockchain)));
+		supply = supply.plus(new Decimal(heightDiff).times(coinConfig.blockRewardFunction2(i, global.activeBlockchain)));
 		
 		i += heightDiff;
 	}
@@ -980,7 +1037,7 @@ function logError(errorId, err, optionalUserData = {}, logStacktrace=true) {
 		};
 	}
 
-	if (optionalUserData && err && err.message) {
+	if (optionalUserData && err.message) {
 		optionalUserData.errorMsg = err.message;
 	}
 
@@ -1374,26 +1431,6 @@ function bip32Addresses(extPubkey, addressType, account, limit=10, offset=0) {
 	return addresses;
 }
 
-function expressRequestToJson(req) {
-	return {
-		method: req.method,
-		url: req.url,
-		headers: req.headers,
-		query: req.query,
-		params: req.params,
-		body: req.body,
-		cookies: req.cookies,
-		signedCookies: req.signedCookies,
-		ip: req.ip,
-		ips: req.ips,
-		protocol: req.protocol,
-		secure: req.secure,
-		originalUrl: req.originalUrl,
-		hostname: req.hostname,
-		baseUrl: req.baseUrl,
-	};
-}
-
 function difficultyAdjustmentEstimates(eraStartBlockHeader, currentBlockHeader) {
 	let difficultyPeriod = parseInt(Math.floor(currentBlockHeader.height / coinConfig.difficultyAdjustmentBlockCount));
 	let blocksUntilDifficultyAdjustment = ((difficultyPeriod + 1) * coinConfig.difficultyAdjustmentBlockCount) - currentBlockHeader.height;
@@ -1506,7 +1543,7 @@ function nextHalvingEstimates(eraStartBlockHeader, currentBlockHeader, difficult
 	};
 }
 
-function tryParseAddress(address) {
+/*function tryParseAddress(address) {
 	let base58Error = null;
 	let bech32Error = null;
 	let bech32mError = null;
@@ -1572,11 +1609,79 @@ function tryParseAddress(address) {
 	}
 
 	return returnVal;
+}*/
+function tryParseAddress(address) {
+	let base58Error = null;
+	let bech32Error = null;
+	let bech32mError = null;
+	let parsedAddress = null;
+	// Try decoding as base58check no matter the prefix
+	try {
+		// First try with bitcoinjs-lib
+		parsedAddress = bitcoinjs.address.fromBase58Check(address);
+		parsedAddress.hash = parsedAddress.hash.toString("hex");
+		return {
+			encoding: "base58",
+			parsedAddress: parsedAddress
+		};
+	} catch (err) {
+		base58Error = err;
+		// Fallback: manually decode base58check
+		try {
+			const decoded = bs58check.decode(address);
+
+			return {
+				encoding: "base58-custom",
+				parsedAddress: {
+					version: decoded[0],
+					hash: decoded.slice(1).toString("hex")
+				}
+			};
+		} catch (err2) {
+			base58Error = err2;
+		}
+	}
+	// Try bech32
+	try {
+		parsedAddress = bitcoinjs.address.fromBech32(address);
+		parsedAddress.data = parsedAddress.data.toString("hex");
+
+		return {
+			encoding: "bech32",
+			parsedAddress: parsedAddress
+		};
+
+	} catch (err) {
+		bech32Error = err;
+	}
+	// Try bech32m
+	try {
+		parsedAddress = bech32m.decode(address);
+		parsedAddress.words = Buffer.from(parsedAddress.words).toString("hex");
+
+		return {
+			encoding: "bech32m",
+			parsedAddress: parsedAddress
+		};
+
+	} catch (err) {
+		bech32mError = err;
+	}
+	// If all parsing fails, return all errors
+	let returnVal = { errors: [] };
+	if (base58Error) {
+		returnVal.errors.push(base58Error);
+	}
+	if (bech32Error) {
+		returnVal.errors.push(bech32Error);
+	}
+	if (bech32mError) {
+		returnVal.errors.push(bech32mError);
+	}
+	return returnVal;
 }
 
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 const awaitPromises = async (promises) => {
 	const promiseResults = await Promise.allSettled(promises);
 
@@ -1587,10 +1692,8 @@ const awaitPromises = async (promises) => {
 			}
 		}
 	});
-
 	return promiseResults;
 };
-
 const obfuscateProperties = (obj, properties) => {
 	if (process.env.BTCEXP_SKIP_LOG_OBFUSCATION) {
 		return obj;
@@ -1630,32 +1733,9 @@ const perfLogNewItem = (tags) => {
 	};
 };
 
-function trackAppEvent(name, count=1, params=null) {
-	if (!global.appEventStats[name]) {
-		global.appEventStats[name] = {count:0};
-	}
-
-	global.appEventStats[name].count += count;
-	global.appEventStats[name].last = new Date();
-
-	if (params != null) {
-		if (global.appEventStats[name].params == null) {
-			global.appEventStats[name].params = {};
-		}
-
-		let props = objectProperties(params);
-
-		props.forEach(prop => {
-			if (global.appEventStats[name].params[`${prop}[${params[prop]}]`] == null) {
-				global.appEventStats[name].params[`${prop}[${params[prop]}]`] = {count: 0};
-			}
-
-			global.appEventStats[name].params[`${prop}[${params[prop]}]`].count += count;
-		});
-	}
-}
-
 module.exports = {
+	getprice: getprice,
+	getcurrentsupply: getcurrentsupply,
 	reflectPromise: reflectPromise,
 	redirectToConnectPageIfNeeded: redirectToConnectPageIfNeeded,
 	formatHex: formatHex,
@@ -1717,7 +1797,5 @@ module.exports = {
 	awaitPromises: awaitPromises,
 	perfLogNewItem: perfLogNewItem,
 	perfLog: perfLog,
-	fileCache: fileCache,
-	expressRequestToJson: expressRequestToJson,
-	trackAppEvent: trackAppEvent
+	fileCache: fileCache
 };
