@@ -230,9 +230,9 @@ if (exchangeRates)
 		+summaryItem("Max Supply / Circulation", utxoSetSummary ? null : `Coin Supply.`)
 			- var maxSupply = coinConfig.maxSupplyByNetwork[activeBlockchain];
 			- var rscurrentSupply = utils.getcurrentsupply();
-			- var rscurrentSupplyPercentage = ((utils.getcurrentsupply()/35000000)*100);
+			- var rscurrentSupplyPercentage = ((utils.getcurrentsupply()/21000000)*100);
 			- var rscurrentSupplyPercentageRound = parseFloat(rscurrentSupplyPercentage).toFixed(2);
-			span.ms-2.text-muted(style="font-size: 13pt;color: black !important;") 35,000,000 / #{parseFloat(rscurrentSupply).toLocaleString()}
+			span.ms-2.text-muted(style="font-size: 13pt;color: black !important;") 21,000,000 / #{parseFloat(rscurrentSupply).toLocaleString()}
 			small.ms-2.text-muted(style="font-size: 11pt;")
 				| (
 				span.border-dotted(title=`${parseFloat(rscurrentSupplyPercentageRound).toLocaleString()}% of HRC has been mined into circulation.`, data-bs-toggle="tooltip") #{parseFloat(rscurrentSupplyPercentageRound).toLocaleString()}%
@@ -341,9 +341,13 @@ if (exchangeRates)
 
 					| #{x}
 					span.text-tiny.text-muted.ms-1 (#{smartFeeEstimateTimes[xIndex]})
-		+summaryItem("Price", utxoSetSummary ? null : `Coin Price.`)
-			- var varfgetprice = parseFloat(utils.getprice()).toFixed(6);
-			span.ms-2.text-muted(style="font-size: 14pt;color: black !important;") $#{varfgetprice.toLocaleString()}
+		+summaryItem("", utxoSetSummary ? null : `Coin Price.`)
+			- var varfgetprice = "";
+			span.ms-2.text-muted(style="font-size: 14pt;color: black !important;") #{varfgetprice.toLocaleString()}
+
+		//+summaryItem("Price", utxoSetSummary ? null : `Coin Price.`)
+		//	- var varfgetprice = parseFloat(utils.getprice()).toFixed(6);
+		//	span.ms-2.text-muted(style="font-size: 14pt;color: black !important;") $#{varfgetprice.toLocaleString()}
 
 	if (userSettings.homepageShowTechDetails == "true")
 		hr.mt-3.mb-3
