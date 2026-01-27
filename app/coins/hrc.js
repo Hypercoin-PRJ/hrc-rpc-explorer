@@ -113,8 +113,8 @@ module.exports = {
 		"regtest": new Decimal(21000000),
 		"signet": new Decimal(21000000)
 	},
-	targetBlockTimeSeconds: 30,
-	targetBlockTimeMinutes: 0.5,
+	targetBlockTimeSeconds: 60,
+	targetBlockTimeMinutes: 1,
 	currencyUnits:currencyUnits,
 	currencyUnitsByName:{"HRC":currencyUnits[0], "mHRC":currencyUnits[1], "bits":currencyUnits[2], "sat":currencyUnits[3]},
 	baseCurrencyUnit:currencyUnits[3],
@@ -583,7 +583,7 @@ module.exports = {
 		} else if (blockHeight > 100000 && blockHeight <= 500000) {
 			reward = 5;
 		} else if (blockHeight > 500000) {
-			const baseReward = 5;
+			const baseReward = 2.5;
 			const halvingsCount = Math.floor((blockHeight - 500001) / halvingInterval);
 			reward = baseReward / Math.pow(2, halvingsCount);
 			//console.log("Block:", blockHeight, "→ Halvings:", halvingsCount, "→ Reward:", reward);
