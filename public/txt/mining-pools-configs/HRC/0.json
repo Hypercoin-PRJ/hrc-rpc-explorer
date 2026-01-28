@@ -56,9 +56,9 @@
         "name": "Ashampool",
         "link": "Ashampool"    
       },
-        "BriskCoin-Pool": {
-        "name": "BriskCoin-Pool",
-        "link": "BriskCoin-Pool"    
+        "Hypercoin-Pool": {
+        "name": "Hypercoin-Pool",
+        "link": "Hypercoin-Pool"    
       },
         "CALAJA MINER": {
         "name": "CALAJA",
@@ -71,6 +71,14 @@
         "EpicMario71": {
         "name": "EpicMario71",
         "link": "EpicMario71"    
+      },
+        "KriptoKyng": {
+        "name": "KriptoKyng",
+        "link": "KriptoKyng"    
+      },
+        "Doutor Score": {
+        "name": "Doutor",
+        "link": "KriptoKyDoutorng"    
       }
     },
       "payout_addresses": {
