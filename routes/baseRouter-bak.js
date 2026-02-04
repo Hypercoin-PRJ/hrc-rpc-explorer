@@ -20,14 +20,13 @@ const semver = require("semver");
 const markdown = require("markdown-it")();
 const asyncHandler = require("express-async-handler");
 
-const utils = require('./../app/utils.js');
-const coins = require("./../app/coins.js");
-const config = require("./../app/config.js");
-const coreApi = require("./../app/api/coreApi.js");
-const addressApi = require("./../app/api/addressApi.js");
-const rpcApi = require("./../app/api/rpcApi.js");
-const btcQuotes = require("./../app/coins/btcQuotes.js");
-const fetch = require('node-fetch');
+const utils = require('../app/utils.js');
+const coins = require("../app/coins.js");
+const config = require("../app/config.js");
+const coreApi = require("../app/api/coreApi.js");
+const addressApi = require("../app/api/addressApi.js");
+const rpcApi = require("../app/api/rpcApi.js");
+const btcQuotes = require("../app/coins/btcQuotes.js");
 
 const forceCsrf = csrfApi({ ignoreMethods: [] });
 
@@ -317,7 +316,7 @@ router.get("/mempool-summary", asyncHandler(async (req, res, next) => {
 	}
 }));
 
-/*router.get("/peers", asyncHandler(async (req, res, next) => {
+router.get("/peers", asyncHandler(async (req, res, next) => {
 	try {
 		const { perfId, perfResults } = utils.perfLogNewItem({action:"peers"});
 		res.locals.perfId = perfId;
@@ -370,7 +369,7 @@ router.get("/mempool-summary", asyncHandler(async (req, res, next) => {
 
 		next();
 	}
-}));*/
+}));
 
 router.post("/connect", function(req, res, next) {
 	let host = req.body.host;
@@ -2473,264 +2472,5 @@ router.get("/bitcoin.pdf", function(req, res, next) {
 		next();
 	});
 });
-
-// ============================================================================
-// Geo-location functions for peers
-// ============================================================================
-
-async function getCountryFromIP(ip) {
-    try {
-        // Using ipwho.is (free, no API key required)
-        const response = await fetch(`https://ipwho.is/${ip}`);
-        const data = await response.json();
-        
-        if (data && data.success) {
-            return {
-                country_code: data.country_code,
-                country_name: data.country,
-                city: data.city,
-                region: data.region,
-                region_name: data.region, // Add region_name for template compatibility
-                latitude: data.latitude,
-                longitude: data.longitude
-            };
-        } else {
-            console.log(`IP whois failed for ${ip}:`, data);
-        }
-    } catch (error) {
-        console.log(`Failed to fetch country for IP: ${ip}`, error);
-    }
-
-    return null;
-}
-
-async function enhancePeerDataWithCountries(peerIps) {
-    const detailsByIp = {};
-    const ips = [];
-
-    for (const ipAddr of peerIps) {
-        if (!detailsByIp[ipAddr]) {
-            ips.push(ipAddr);
-            try {
-                const countryInfo = await getCountryFromIP(ipAddr);
-                if (countryInfo) {
-                    detailsByIp[ipAddr] = countryInfo;
-                    console.log(`Found country for ${ipAddr}:`, countryInfo.country_code, countryInfo.country_name);
-                } else {
-                    detailsByIp[ipAddr] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-                    console.log(`No country found for ${ipAddr}`);
-                }
-            } catch (error) {
-                console.log(`Error processing IP ${ipAddr}:`, error);
-                detailsByIp[ipAddr] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-            }
-            
-            // Add small delay to respect API rate limits
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-    }
-
-    return {
-        ips,
-        detailsByIp
-    };
-}
-
-router.get("/peers", asyncHandler(async (req, res, next) => {
-	try {
-		const { perfId, perfResults } = utils.perfLogNewItem({action:"peers"});
-		res.locals.perfId = perfId;
-
-		const promises = [];
-
-		// Get peer summary from core API
-		promises.push(utils.timePromise("peers.getPeerSummary", async () => {
-			res.locals.peerSummary = await coreApi.getPeerSummary();
-		}, perfResults));
-
-		await utils.awaitPromises(promises);
-
-		let peerSummary = res.locals.peerSummary;
-
-		// Add service names if not provided by node
-		if (!peerSummary.serviceNamesAvailable) {
-			const serviceFlags = {
-				"01": "NETWORK",
-				"02": "GETUTXO", 
-				"04": "BLOOM",
-				"08": "WITNESS",
-				"10": "NETWORK_LIMITED",
-				"40": "P2P_V2"
-			};
-
-			for (let peer of peerSummary.getpeerinfo) {
-				if (peer.services && !peer.servicesnames) {
-					peer.servicesnames = [];
-					const servicesHex = parseInt(peer.services).toString(16).toUpperCase().padStart(2, '0');
-					
-					for (const [flag, name] of Object.entries(serviceFlags)) {
-						if (parseInt(servicesHex, 16) & parseInt(flag, 16)) {
-							peer.servicesnames.push(name);
-						}
-					}
-				}
-			}
-			
-			peerSummary.serviceNamesAvailable = true;
-		}
-
-		// Extract ALL IP addresses (don't filter out local/private IPs)
-		let peerIps = [];
-		let allIps = []; // This will contain ALL IPs for the template
-		
-		for (let i = 0; i < peerSummary.getpeerinfo.length; i++) {
-			let ipWithPort = peerSummary.getpeerinfo[i].addr;
-			
-			// Fix IP formatting - replace commas with dots if needed
-			ipWithPort = ipWithPort.replace(/,/g, '.');
-			
-			if (ipWithPort.lastIndexOf(":") >= 0) {
-				let ip = ipWithPort.substring(0, ipWithPort.lastIndexOf(":"));
-				ip = ip.trim();
-				
-				if (ip.length > 0) {
-					allIps.push(ip); // Store ALL IPs for template
-					
-					// Only geo-locate public IPs (skip localhost/private IPs for API calls)
-					if (!ip.startsWith("127.0.0.1") && 
-						!ip.startsWith("192.168.") && 
-						!ip.startsWith("10.") && 
-						!ip.startsWith("172.16.") &&
-						!ip.startsWith("172.17.") &&
-						!ip.startsWith("172.18.") &&
-						!ip.startsWith("172.19.") &&
-						!ip.startsWith("172.20.") &&
-						!ip.startsWith("172.21.") &&
-						!ip.startsWith("172.22.") &&
-						!ip.startsWith("172.23.") &&
-						!ip.startsWith("172.24.") &&
-						!ip.startsWith("172.25.") &&
-						!ip.startsWith("172.26.") &&
-						!ip.startsWith("172.27.") &&
-						!ip.startsWith("172.28.") &&
-						!ip.startsWith("172.29.") &&
-						!ip.startsWith("172.30.") &&
-						!ip.startsWith("172.31.")) {
-						peerIps.push(ip);
-					}
-				}
-			}
-		}
-
-		// Geo-locate only public IP addresses
-		if (peerIps.length > 0) {
-			res.locals.peerIpSummary = await utils.timePromise("peers.geoLocateIpAddresses", async () => {
-				const detailsByIp = {};
-				const ips = [];
-
-				for (const ipAddr of peerIps) {
-					if (!detailsByIp[ipAddr]) {
-						ips.push(ipAddr);
-						try {
-							const countryInfo = await getCountryFromIP(ipAddr);
-							if (countryInfo) {
-								detailsByIp[ipAddr] = countryInfo;
-								console.log(`Found country for ${ipAddr}:`, countryInfo.country_code, countryInfo.country_name);
-							} else {
-								detailsByIp[ipAddr] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-							}
-						} catch (error) {
-							console.log(`Error processing IP ${ipAddr}:`, error);
-							detailsByIp[ipAddr] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-						}
-						
-						// Add small delay to respect API rate limits
-						await new Promise(resolve => setTimeout(resolve, 100));
-					}
-				}
-
-				// Add empty entries for local/private IPs so template doesn't break
-				for (const ipAddr of allIps) {
-					if (!detailsByIp[ipAddr]) {
-						detailsByIp[ipAddr] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-					}
-				}
-
-				return {
-					ips: allIps, // Return ALL IPs, not just the geo-located ones
-					detailsByIp
-				};
-			}, perfResults);
-		} else {
-			// If no public IPs, still create entries for all IPs
-			const detailsByIp = {};
-			for (const ipAddr of allIps) {
-				detailsByIp[ipAddr] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-			}
-			
-			res.locals.peerIpSummary = {
-				ips: allIps,
-				detailsByIp
-			};
-		}
-
-		// Debug log to check what data we have
-		console.log('First peer services:', peerSummary.getpeerinfo[0].services, 'Service names:', peerSummary.getpeerinfo[0].servicesnames);
-		
-		res.locals.mapBoxComApiAccessKey = config.credentials.mapBoxComApiAccessKey;
-
-		// Render the page
-		await utils.timePromise("peers.render", async () => {
-			res.render("peers");
-		}, perfResults);
-
-		next();
-
-	} catch (err) {
-		utils.logError("394rhweghe", err);
-					
-		res.locals.userMessage = "Error: " + err;
-
-		// Fallback: try to get basic peer data without geo-location
-		try {
-			res.locals.peerSummary = await coreApi.getPeerSummary();
-			// Create empty geo data for all peers
-			const detailsByIp = {};
-			const allIps = [];
-			
-			for (let i = 0; i < res.locals.peerSummary.getpeerinfo.length; i++) {
-				let ipWithPort = res.locals.peerSummary.getpeerinfo[i].addr;
-				ipWithPort = ipWithPort.replace(/,/g, '.');
-				
-				if (ipWithPort.lastIndexOf(":") >= 0) {
-					let ip = ipWithPort.substring(0, ipWithPort.lastIndexOf(":"));
-					ip = ip.trim();
-					
-					if (ip.length > 0) {
-						allIps.push(ip);
-						detailsByIp[ip] = { country_code: null, country_name: null, city: null, region: null, region_name: null };
-					}
-				}
-			}
-			
-			res.locals.peerIpSummary = {
-				ips: allIps,
-				detailsByIp
-			};
-		} catch (e) {
-			res.locals.peerSummary = { getpeerinfo: [] };
-			res.locals.peerIpSummary = {
-				ips: [],
-				detailsByIp: {}
-			};
-		}
-
-		await utils.timePromise("peers.render", async () => {
-			res.render("peers");
-		});
-
-		next();
-	}
-}));
 
 module.exports = router;
