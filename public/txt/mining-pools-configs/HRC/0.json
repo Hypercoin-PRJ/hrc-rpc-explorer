@@ -48,7 +48,7 @@
         "name": "Ashampool",
         "link": "ashampool"    
       },
-        "TheSatoshi-BriskCoin-Pool": {
+        "TheSatoshi-Pool": {
         "name": "TheSatoshi-Pool",
         "link": "TheSatoshi-Pool"    
       },
@@ -79,7 +79,28 @@
         "Doutor Score": {
         "name": "Doutor",
         "link": "KriptoKyDoutorng"    
+      },
+        "solopool.site": {
+        "name": "Solopool",
+        "link": "solopool.site"    
+      },
+        "JouleCoin (XJO)": {
+        "name": "JouleCoin",
+        "link": "JouleCoin (XJO)"    
+      },
+        "Mining4People": {
+        "name": "Mining4People",
+        "link": "Mining4People"    
+      },
+        "Mined by Bitofsin pool": {
+        "name": "Bitofsin",
+        "link": "Bitofsin"    
+      },
+        "MINED BY GO-POOLMINING": {
+        "name": "GO-POOLMINING",
+        "link": "GO-POOLMINING"    
       }
+      
     },
       "payout_addresses": {
         "B8sp34FQ36pZ4MoShp6qUB23AnGrG4Doya": {
