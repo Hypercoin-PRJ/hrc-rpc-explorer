@@ -262,16 +262,31 @@ html(lang="en")
 
         div(style="margin-bottom: 30px;")
 
-    footer.footer.border-top.border-primary.bg-header-footer.pt-3.pb-1.text-white(style="border-width: 0px !important;")
+    footer.footer.border-top.border-primary.bg-header-footer.pt-3.pb-1.text-white(style="border-width: 0px !important; height: 100px; min-height: 100px; max-height: 150px; display: flex; align-items: center; flex-shrink: 0; margin-top: auto;")
+      .container
+        .row.mb-0
+          .col-12.col-md-7
+            .mb-0
+            h9
+              span(style="font-weight: bold;color:white;") Bitcoin
+              |  (BTC) Donation : 12S9zLFnVibtiDSdB6J8ta12Dmr3x85Lot
+              br
+            h9
+              | &copy; 
+              script(type="text/javascript").
+                document.write(new Date().getFullYear());
+              |  by Hypercoin
+              br
+    //footer.footer.border-top.border-primary.bg-header-footer.pt-3.pb-1.text-white(style="border-width: 0px !important;")
       .container
         .row.mb-7
           .col-12.col-md-7
             .mb-4
             h9 <span style="font-weight: bold;color:white;">Bitcoin</span> (BTC) Donation : 12S9zLFnVibtiDSdB6J8ta12Dmr3x85Lot <Br>
-            //a.text-danger.mb-1.me-3(href="https://...", style="text-decoration: none;",target="_blank", title="Support this project with a donation", data-bs-toggle="donation")
-              h9 <span style="font-weight: bold;color:white;">Donate with various currencies...</span><br>
             h9 &copy; <script type="text/javascript">document.write(new Date().getFullYear());</script> by Hypercoin <br>  
-            //h9 Version: #{global.appVersion}
+            a.text-danger.mb-1.me-3(href="https://...", style="text-decoration: none;",target="_blank", title="Support this project with a donation", data-bs-toggle="donation")
+            h9 <span style="font-weight: bold;color:white;">Donate with various currencies...</span><br>
+            h9 Version: #{global.appVersion}
 
     +sharedScriptTags
     
