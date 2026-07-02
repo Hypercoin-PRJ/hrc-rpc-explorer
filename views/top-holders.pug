@@ -1,5 +1,17 @@
 extends layout
 
+block headContent
+  style.
+    .table-hover > tbody > tr:hover > * {
+      color: var(--bs-body-color) !important;
+    }
+
+    .table-hover > tbody > tr:hover a {
+      color: var(--bs-body-color) !important;
+    }
+  //- Empty headContent - layout will handle theme via +themeCss
+  //- This block is needed to ensure the page uses the layout's theme system
+
 block content
   .container.mt-4
     .card
@@ -17,7 +29,7 @@ block content
         if totalAddresses > 0
           .total-addresses-container.mt-2
             strong Total Addresses: 
-            span.text-dark #{totalAddresses.toLocaleString()}
+            span #{totalAddresses.toLocaleString()}
         
       .card-body
         if error
@@ -84,4 +96,85 @@ block endOfBody
           link.setAttribute('href', './top-holders' + link.getAttribute('href'));
         }
       });
+
+      // Function to get cookie value
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+
+      // Apply theme from cookie
+      function applyThemeFromCookie() {
+        const theme = getCookie('uiTheme') || 'light';
+        const htmlElement = document.documentElement;
+        
+        // Remove any existing theme classes
+        htmlElement.classList.remove('theme-light', 'theme-dark', 'theme-dark-v1');
+        
+        // Apply the theme from cookie
+        if (theme === 'dark') {
+          htmlElement.classList.add('theme-dark');
+        } else if (theme === 'dark-v1') {
+          htmlElement.classList.add('theme-dark-v1');
+        } else {
+          htmlElement.classList.add('theme-light');
+        }
+      }
+
+      // Apply theme on load
+      applyThemeFromCookie();
+
+      // Watch for theme changes
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.attributeName === 'class') {
+            // Theme was changed by layout, ensure consistency
+            applyThemeFromCookie();
+          }
+        });
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
+      // Also check periodically for theme changes (every 2 seconds)
+      let lastTheme = getCookie('uiTheme') || 'light';
+      setInterval(function() {
+        const currentTheme = getCookie('uiTheme') || 'light';
+        if (currentTheme !== lastTheme) {
+          lastTheme = currentTheme;
+          applyThemeFromCookie();
+        }
+      }, 2000);
     });
+
+  //- Force theme application immediately
+  script.
+    (function() {
+      // Immediately apply theme from cookie
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+
+      const theme = getCookie('uiTheme') || 'light';
+      const htmlElement = document.documentElement;
+      
+      // Remove any existing theme classes
+      htmlElement.classList.remove('theme-light', 'theme-dark', 'theme-dark-v1');
+      
+      // Apply the theme from cookie
+      if (theme === 'dark') {
+        htmlElement.classList.add('theme-dark');
+      } else if (theme === 'dark-v1') {
+        htmlElement.classList.add('theme-dark-v1');
+      } else {
+        htmlElement.classList.add('theme-light');
+      }
+    })();
