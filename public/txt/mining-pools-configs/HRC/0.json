@@ -103,6 +103,15 @@
         "LuckyTurtle Harbor": {
         "name": "LTH",
         "link": "LuckyTurtle Harbor"    
+      },
+        "MCMpool": {
+        "name": "MCMpool",
+        "link": "MCMpool"    
+      }
+      ,
+        "Hash'n'Omletz": {
+        "name": "Hash Omletz",
+        "link": "Hash'n'Omletz"    
       }
     },
       "payout_addresses": {
