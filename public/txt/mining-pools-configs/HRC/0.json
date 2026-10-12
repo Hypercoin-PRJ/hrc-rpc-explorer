@@ -122,6 +122,10 @@
         "Kriptokyng Pool": {
         "name": "Kriptokyng",
         "link": "Kriptokyng"    
+      },
+        "MegaHashPool.es": {
+        "name": "MegaHashPool",
+        "link": "MegaHashPool"    
       }
     },
       "payout_addresses": {
