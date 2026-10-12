@@ -113,6 +113,16 @@
         "name": "Hash Omletz",
         "link": "Hash'n'Omletz"    
       }
+      ,
+        "ckpool": {
+        "name": "Ckpool",
+        "link": "Ckpool"    
+      }
+      ,
+        "Kriptokyng Pool": {
+        "name": "Kriptokyng",
+        "link": "Kriptokyng"    
+      }
     },
       "payout_addresses": {
         "B8sp34FQ36pZ4MoShp6qUB23AnGrG4Doya": {
