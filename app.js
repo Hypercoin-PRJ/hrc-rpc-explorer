@@ -503,7 +503,7 @@ async function onRpcConnectionVerified(getnetworkinfo, getblockchaininfo) {
 		global.pruneHeight = getblockchaininfo.pruneheight;
 	}
 
-	var bitcoinCoreVersionRegex = /^.*\/BriskcoinCore\:(.*)\/.*$/;
+	var bitcoinCoreVersionRegex = /^.*\/HypercoinCore\:(.*)\/.*$/;
 
 	var match = bitcoinCoreVersionRegex.exec(getnetworkinfo.subversion);
 	if (match) {

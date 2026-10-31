@@ -224,7 +224,7 @@ module.exports = {
 			txOutputMaxDefaultDisplay:10
 		},
 		valueDisplayMaxLargeDigits: 4,
-		prioritizedToolIdsList: [0, 10, 11, 9, 3, 4, 16, 12, 2, 5, 15, 1, 6, 7, 13, 8],
+		prioritizedToolIdsList: [0, 10, 11, 9, 3, 4, 16, 12, 2, 5, 15, 1, 6, 7, 13, 8,22],
 		toolSections: [
 			{name: "Basics", items: [0, 2]},
 			{name: "Mempool", items: [4, 16, 5]},
@@ -232,7 +232,7 @@ module.exports = {
 			//{name: "Analysis", items: [9, 18, 10, 11, 12, 3, 20]},
 			{name: "Analysis", items: [9, 18, 10, 11, 12, 20,21]},
 			
-			{name: "Technical", items: [1]},
+			{name: "Technical", items: [22,1]},
 			//{name: "Technical", items: [15, 6, 7, 1]},
 			//{name: "Fun", items: [8, 17, 19, 13]},
 		]
@@ -276,6 +276,8 @@ module.exports = {
 	/* 20 */	{name:"Next Halving", url:"./next-halving", desc:"Estimated details about the next halving.", iconClass:"bi-square-half"},
 
 	/* 21 */	{name:"Top Holders", url:"./top-holders", desc:"View top 100 Hypercoin holders", iconClass:"bi-trophy"},
+
+	/* 22 */ 	{name:"API", url:"https://api.hypercoin.network/", desc:"Hypercoin API", iconClass:"bi-braces-asterisk"},
 	]
 };
 

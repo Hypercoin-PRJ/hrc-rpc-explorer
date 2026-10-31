@@ -15,7 +15,7 @@ Live available at:
 * Network Summary dashboard
 * View details of blocks, transactions, and addresses
 * Analysis tools for viewing stats on blocks, transactions, and miner activity
-* See raw JSON content from briskcoind used to generate most pages
+* See raw JSON content from hypercoind used to generate most pages
 * Search by transaction ID, block hash/height, and address
 * Optional transaction history for addresses by querying from Electrum-protocol servers (e.g. Electrs, ElectrumX), blockchain.com, blockchair.com, or blockcypher.com
 * Mempool summary, with fee, size, and age breakdowns
@@ -88,7 +88,7 @@ In either case, refer to [.env-sample](.env-sample) for a list of the options an
 For configuring with CLI arguments, run `HRC-rpc-explorer --help` for the full list of options. An example execution is:
 
 ```bash
-HRC-rpc-explorer --port 8080 --briskcoind-port 18443 --briskcoind-cookie ~/.hypercoin/regtest/.cookie
+HRC-rpc-explorer --port 8080 --hypercoind-port 18443 --hypercoind-cookie ~/.hypercoin/regtest/.cookie
 ```
 
 #### Demo site settings
